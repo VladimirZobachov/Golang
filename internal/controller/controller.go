@@ -13,10 +13,16 @@ type Controller struct {
 	applications AppAPI
 }
 
-func (c *Controller) Auth(appKey string) (accessToken string, err error) {
-	return c.sudis.Auth(appKey)
-}
+func (c *Controller) GetData(appKey string) (data []byte) {
+	accessToken, err := c.sudis.Auth("appKey")
+	if err != nil {
+		return
+	}
 
-func (c *Controller) GetData(accessToken string) (data []byte, err error) {
-	return c.applications.GetData(accessToken)
+	result, err := c.applications.GetData(accessToken)
+	if err != nil {
+		return
+	}
+
+	return []byte(result)
 }

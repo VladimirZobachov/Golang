@@ -9,7 +9,7 @@ func main() {
 
 	controllerInstance := controller.Controller{}
 
-	response := controllerInstance.Auth("appKey")
+	response := controllerInstance.GetData("appKey")
 
 	getData := func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(response))
