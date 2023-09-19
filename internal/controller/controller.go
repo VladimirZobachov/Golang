@@ -5,7 +5,7 @@ type SudisAPI interface {
 }
 
 type AppAPI interface {
-	Get(accessToken string) (data []byte, err error)
+	GetData(accessToken string) (data []byte, err error)
 }
 
 type Controller struct {
@@ -13,6 +13,10 @@ type Controller struct {
 	applications AppAPI
 }
 
-func (c *Controller) Auth(appKey string) (accessToken string) {
-	return "[{'app_key':'sadfafdafa'}]"
+func (c *Controller) Auth(appKey string) (accessToken string, err error) {
+	return c.sudis.Auth(appKey)
+}
+
+func (c *Controller) GetData(accessToken string) (data []byte, err error) {
+	return c.applications.GetData(accessToken)
 }

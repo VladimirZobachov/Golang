@@ -11,11 +11,11 @@ func main() {
 
 	response := controllerInstance.Auth("appKey")
 
-	test := func(w http.ResponseWriter, r *http.Request) {
+	getData := func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(response))
 	}
 
-	http.HandleFunc("/test", test)
+	http.HandleFunc("/data", getData)
 
 	http.ListenAndServe(":8080", nil)
 }
