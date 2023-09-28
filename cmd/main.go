@@ -5,15 +5,31 @@ import (
 	"log"
 	"time"
 
+	"github.com/apache/thrift/lib/go/thrift"
+
 	"api/internal/controller"
-	"api/internal/proxi/applications"
-	"api/internal/proxi/sudis"
+	"api/internal/proxy/applications"
+	"api/internal/proxy/sudis"
+	"api/internal/proxy/sudis/thrift/gen-go/ccispauth"
 
 	"net/http"
 )
 
 func main() {
-	sds := &sudis.SudisAPI{} // тоже переделать на конструктор
+	// уточнить какой используется транспорт, если не стандартный
+	transport, err := thrift.NewTHttpClient("https://sudis.mvd.ru/api")
+	if err != nil {
+		log.Fatalln("new thrift client:", err)
+	}
+	defer func() {
+		_ = transport.Close()
+	}()
+
+	// todo: уточнить какой протокол и клиент использовать, их здесь несколько штук. может быть конфигурация ещё понадобится
+	// я взял для примера инициализации
+	client := thrift.NewTStandardClient(thrift.NewTJSONProtocol(transport), thrift.NewTJSONProtocol(transport))
+
+	sds := sudis.NewSudisAPI(ccispauth.NewTCciSpAuthClient(client))
 	app := applications.NewAppAPI()
 
 	ctl := controller.NewController(sds, app)

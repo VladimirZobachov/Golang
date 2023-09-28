@@ -1,6 +1,9 @@
 package controller
 
-import "net/http"
+import (
+	"context"
+	"net/http"
+)
 
 type endpoint string
 
@@ -10,11 +13,12 @@ const (
 )
 
 type SudisAPI interface {
-	Auth(appKey string) (accessToken string, err error)
+	Auth(ctx context.Context, spCode, targetSpCode string) (token string, err error)
 }
 
 type AppAPI interface {
 	GetData(accessToken string) (data []byte, err error)
+	// todo: добавить все методы
 }
 
 type Controller struct {
@@ -22,7 +26,6 @@ type Controller struct {
 	applications AppAPI
 }
 
-// todo: тут и в осталдьных местах лучше делать через конструктор
 func NewController(s SudisAPI, a AppAPI) *Controller {
 	return &Controller{
 		sudis:        s,
@@ -38,10 +41,11 @@ func (c *Controller) GetData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ep := r.Header.Get("endpoint")
-	appKey := r.Header.Get("app_key")
+	spCode := r.Header.Get("sp_code")
+	targetSpCode := r.Header.Get("target_sp_code")
 	// todo: проверить, что параметры не пустые, если пустые вернуть ошибку, как выше сделано с проверкой метода
 
-	accessToken, err := c.sudis.Auth(appKey)
+	accessToken, err := c.sudis.Auth(r.Context(), spCode, targetSpCode)
 
 	var data []byte
 	// здесь мы приводим ep к нашему кастомному типу, чтобы сравнивать с заданными константами. в целом, можно

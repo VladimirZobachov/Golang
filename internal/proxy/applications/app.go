@@ -9,12 +9,9 @@ import (
 
 type AppAPI struct{}
 
-// тоже лучше конструктор, несмотря на то, что у структуры нет полей
 func NewAppAPI() *AppAPI {
 	return new(AppAPI)
 }
-
-// todo: тебе здесь совершенно не нужны ни реквест ни респонзврайтер, ты просто возвращаешь []byte и ошибку
 
 func (a *AppAPI) GetData(accessToken string) ([]byte, error) {
 	client := &http.Client{
@@ -33,7 +30,9 @@ func (a *AppAPI) GetData(accessToken string) ([]byte, error) {
 	if err != nil {
 		// todo: обернуть и вернуть ошибку
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	// не используй ioutil.ReadAll - он депрекейтед
 	body, err := io.ReadAll(resp.Body)
