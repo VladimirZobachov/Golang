@@ -16,20 +16,33 @@ import (
 )
 
 func main() {
-	// уточнить какой используется транспорт, если не стандартный
-	transport, err := thrift.NewTHttpClient("https://sudis.mvd.ru/api")
-	if err != nil {
-		log.Fatalln("new thrift client:", err)
+	cfg := &thrift.TConfiguration{
+		ConnectTimeout: 15 * time.Second,
+		SocketTimeout:  15 * time.Second,
 	}
-	defer func() {
-		_ = transport.Close()
-	}()
+
+	protocolFactory := thrift.NewTBinaryProtocolFactoryConf(cfg)
+	transportFactory := thrift.NewTTransportFactory()
+
+	// уточнить какой используется транспорт, если не стандартный
+	var transport thrift.TTransport
+	transport = thrift.NewTSocketConf("localhost:9090", cfg)
+
+	transport, err := transportFactory.GetTransport(transport)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer func() { _ = transport.Close() }()
+
+	if err = transport.Open(); err != nil {
+		log.Fatalln(err)
+	}
 
 	// todo: уточнить какой протокол и клиент использовать, их здесь несколько штук. может быть конфигурация ещё понадобится
-	// я взял для примера инициализации
-	client := thrift.NewTStandardClient(thrift.NewTJSONProtocol(transport), thrift.NewTJSONProtocol(transport))
+	in := protocolFactory.GetProtocol(transport)
+	out := protocolFactory.GetProtocol(transport)
 
-	sds := sudis.NewSudisAPI(ccispauth.NewTCciSpAuthClient(client))
+	sds := sudis.NewSudisAPI(ccispauth.NewTCciSpAuthClient(thrift.NewTStandardClient(in, out)))
 	app := applications.NewAppAPI()
 
 	ctl := controller.NewController(sds, app)

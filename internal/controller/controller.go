@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 )
 
@@ -45,8 +46,10 @@ func (c *Controller) GetData(w http.ResponseWriter, r *http.Request) {
 	targetSpCode := r.Header.Get("target_sp_code")
 	// todo: проверить, что параметры не пустые, если пустые вернуть ошибку, как выше сделано с проверкой метода
 
+	fmt.Println(ep, spCode, targetSpCode)
 	accessToken, err := c.sudis.Auth(r.Context(), spCode, targetSpCode)
 
+	fmt.Println(accessToken)
 	var data []byte
 	// здесь мы приводим ep к нашему кастомному типу, чтобы сравнивать с заданными константами. в целом, можно
 	// оставить и просто строку, но принято делать условный енум

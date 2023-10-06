@@ -2,6 +2,7 @@ package sudis
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -17,6 +18,7 @@ func NewSudisAPI(client *ccispauth.TCciSpAuthClient) *SudisAPI {
 }
 
 func (s *SudisAPI) Auth(ctx context.Context, spCode, targetSpCode string) (string, error) {
+	fmt.Println(spCode, targetSpCode)
 	resp, err := s.client.CreateToken(ctx, &ccispauth.TCciSpAuthCreateTokenArgs_{
 		Version:       ccispauth.TCciSpAuthVersion_V1,
 		RequestMillis: time.Now().UnixMilli(),
@@ -30,5 +32,5 @@ func (s *SudisAPI) Auth(ctx context.Context, spCode, targetSpCode string) (strin
 	}
 
 	// тут не уверен, что надо взять именно это поле в качестве токена. надо уточнить механику дальнейшего взаимодействия
-	return string(resp.TokenData.TokenId), nil
+	return fmt.Sprintf("%+v", resp.TokenData), nil
 }
