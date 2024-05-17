@@ -3,10 +3,17 @@ package websocket
 import (
 	"fmt"
 	socketio "github.com/googollee/go-socket.io"
+	"github.com/googollee/go-socket.io/engineio"
+	"time"
 )
 
 func SetupSocketIO() *socketio.Server {
-	server := socketio.NewServer(nil)
+	options := &engineio.Options{
+		PingInterval: 25 * time.Second, // How often a ping is sent
+		PingTimeout:  60 * time.Second, // How long to wait for a ping response before considering the connection closed
+	}
+
+	server := socketio.NewServer(options)
 
 	server.OnConnect("/", func(s socketio.Conn) error {
 		s.SetContext("")
@@ -20,13 +27,10 @@ func SetupSocketIO() *socketio.Server {
 	})
 
 	server.OnError("/", func(s socketio.Conn, e error) {
-		// server.Remove(s.ID())
 		fmt.Println("meet error:", e)
 	})
 
 	server.OnDisconnect("/", func(s socketio.Conn, reason string) {
-		// Add the Remove session id. Fixed the connection & mem leak
-		//server.Remove(s.ID())
 		fmt.Println("closed", reason)
 	})
 

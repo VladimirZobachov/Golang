@@ -6,8 +6,8 @@ import (
 
 type Reservation struct {
 	ID               int       `gorm:"primary_key" json:"id"`
-	CreatedAt        time.Time `gorm:"created_at" json:"created_at"`
-	UpdatedAt        time.Time `gorm:"updated_at" json:"updated_at"`
+	CreatedAt        time.Time `gorm:"created_at" json:"-"`
+	UpdatedAt        time.Time `gorm:"updated_at" json:"-"`
 	ShiftDate        string    `gorm:"column:shift_date" json:"shift_date"`
 	DepartmentID     int       `gorm:"column:department_id" json:"department_id"`
 	TableID          int64     `gorm:"column:table_id" json:"table_id"`

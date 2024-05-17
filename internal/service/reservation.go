@@ -11,6 +11,7 @@ type ReservationService interface {
 	GetReservationByID(id int64) (*model.Reservation, error)
 	GetAllReservations(dateFrom int64, dateTo int64) (model.ReservationResponseAll, error)
 	UpdateReservation(id int64, reservation *model.Reservation) error
+	UpdateReservationStatus(status string, id int64) error
 	DeleteReservationByID(id int64) error
 	IsAvailableTimeSlot(tableID int64, timeStart int64, timeFinish int64, reservationIDs ...int64) ([]model.Reservation, error)
 }
@@ -97,6 +98,11 @@ func (s *reservationService) GetAllReservations(dateFrom int64, dateTo int64) (m
 
 func (s *reservationService) UpdateReservation(id int64, reservation *model.Reservation) error {
 	result := s.db.Model(reservation).Where("id= ?", id).Updates(reservation)
+	return result.Error
+}
+
+func (s *reservationService) UpdateReservationStatus(status string, id int64) error {
+	result := s.db.Model(&model.Reservation{}).Where("id = ?", id).Update("status", status)
 	return result.Error
 }
 

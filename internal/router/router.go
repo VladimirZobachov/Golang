@@ -18,6 +18,7 @@ func InitRouters(rs service.ReservationService, hs service.HallService, ds servi
 	router.HandleFunc("/api/v1/reservations", controller.GetAllReservations(rs)).Methods("GET")
 	router.HandleFunc("/api/v1/reservations/{id}", controller.GetReservation(rs)).Methods("GET")
 	router.HandleFunc("/api/v1/reservations/{id}", controller.UpdateReservation(rs)).Methods("PUT")
+	router.HandleFunc("/api/v1/reservations/status/{id}", controller.UpdateReservationStatus(rs)).Methods("PUT")
 	router.HandleFunc("/api/v1/reservations/{id}", controller.DeleteReservation(rs)).Methods("DELETE")
 	router.HandleFunc("/api/v1/department/{id}", controller.GetAllWorkTimesByDepartment(ds)).Methods("GET")
 	router.HandleFunc("/api/v1/department/settings/{id}", controller.GetDepartmentSettings(ds)).Methods("GET")

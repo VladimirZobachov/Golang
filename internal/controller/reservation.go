@@ -17,7 +17,7 @@ import (
 // @Tags reservations
 // @Accept json
 // @Produce json
-// @Param reservation body model.ReservationAPI true "Create Reservation"
+// @Param reservation body model.Reservation true "Create Reservation"
 // @Success 200 {object} model.ReservationResponse
 // @Failure 400 {string} string "Invalid input"
 // @Router /reservations [post]
@@ -171,7 +171,7 @@ func GetAllReservations(service service.ReservationService) http.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param id path int true "Reservation ID"
-// @Param reservation body model.ReservationAPI true "Update Reservation"
+// @Param reservation body model.Reservation true "Update Reservation"
 // @Success 200 {object} model.ReservationResponse
 // @Failure 400 {string} string "Invalid input"
 // @Failure 404 {string} string "Reservation not found"
@@ -227,6 +227,67 @@ func UpdateReservation(service service.ReservationService) http.HandlerFunc {
 			ErrorMessage:         "",
 			ConflictReservations: nil,
 			Reservation:          &reservation,
+		}
+
+		if err := json.NewEncoder(writer).Encode(response); err != nil {
+			log.Println("Error encoding response:", err)
+			http.Error(writer, `{"error_message": "Failed to encode response"}`, http.StatusInternalServerError)
+		}
+	}
+}
+
+// UpdateReservationStatus handler
+// @Summary Update a reservation
+// @Description Update an existing reservation with provided information
+// @Tags reservations
+// @Accept json
+// @Produce json
+// @Param id path int true "Reservation ID"
+// @Param status body model.Status true "Reservation Status"
+// @Success 200 {object} model.ReservationResponse
+// @Failure 400 {string} string "Invalid input"
+// @Failure 404 {string} string "Reservation not found"
+// @Router /reservations/status/{id} [put]
+func UpdateReservationStatus(service service.ReservationService) http.HandlerFunc {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		writer.Header().Set("Content-Type", "application/json")
+		vars := mux.Vars(request)
+		id, err := strconv.Atoi(vars["id"])
+		if err != nil {
+			http.Error(writer, `{"error_message": "`+err.Error()+`"}`, http.StatusBadRequest)
+			log.Println(err)
+			return
+		}
+
+		var status struct {
+			Status string `json:"status"`
+		}
+
+		if err := json.NewDecoder(request.Body).Decode(&status); err != nil {
+			http.Error(writer, `{"error_message": "`+err.Error()+`"}`, http.StatusBadRequest)
+			log.Println(err)
+			return
+		}
+
+		err = service.UpdateReservationStatus(status.Status, int64(id))
+		if err != nil {
+			http.Error(writer, `{"error_message": "`+err.Error()+`"}`, http.StatusNotFound)
+			log.Println(err)
+			return
+		}
+
+		reservation, err := service.GetReservationByID(int64(id))
+		if err != nil {
+			http.Error(writer, err.Error(), http.StatusNotFound)
+			log.Println(err)
+			return
+		}
+
+		response := model.ReservationResponse{
+			Success:              true,
+			ErrorMessage:         "",
+			ConflictReservations: nil,
+			Reservation:          reservation,
 		}
 
 		if err := json.NewEncoder(writer).Encode(response); err != nil {
