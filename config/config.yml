@@ -1,0 +1,18 @@
+app:
+  name: 'hostess-service'
+  version: '0.0.1'
+  is_goulash: true
+
+http:
+  port: '8083'
+
+logger:
+  log_level: 'debug'
+  log_out: 'json'
+
+mysql:
+  timeout: '3s'
+
+goulash:
+  api_url: ''
+  api_key: ''
