@@ -1,35 +1,28 @@
-package service
+package repository
 
 import (
-	"encoding/json"
-	"fmt"
-	"gorm.io/gorm"
-	"hostess-service/config"
 	"hostess-service/internal/model"
-	"io"
-	"log"
-	"net/http"
 )
 
-type HallService interface {
-	GetHallsMap() (model.HallResponse, error)
-	ImportHallsFromGoulash() model.HallResponse
-}
+//type HallService interface {
+//	GetHallsMap() (model.HallResponse, error)
+//	ImportHallsFromGoulash() model.HallResponse
+//}
+//
+//type hallService struct {
+//	db      *gorm.DB
+//	apiURL  string
+//	apiKEY  string
+//	apiUUID string
+//}
+//
+//func NewHallService(db *gorm.DB, api config.Goulash) HallService {
+//	return &hallService{db: db, apiURL: api.APIUrl, apiKEY: api.APIKey, apiUUID: api.APIUuid}
+//}
 
-type hallService struct {
-	db      *gorm.DB
-	apiURL  string
-	apiKEY  string
-	apiUUID string
-}
-
-func NewHallService(db *gorm.DB, api config.Goulash) HallService {
-	return &hallService{db: db, apiURL: api.APIUrl, apiKEY: api.APIKey, apiUUID: api.APIUuid}
-}
-
-func (s *hallService) GetHallsMap() (model.HallResponse, error) {
+func (r *repo) GetHallsMap() (model.HallResponse, error) {
 	var halls []model.Hall
-	if err := s.db.Preload("Tables").Find(&halls).Error; err != nil {
+	if err := r.db.Preload("Tables").Find(&halls).Error; err != nil {
 		return model.HallResponse{
 			Success:      false,
 			ErrorMessage: err.Error(),
@@ -72,41 +65,42 @@ func (s *hallService) GetHallsMap() (model.HallResponse, error) {
 
 }
 
-func (s *hallService) ImportHallsFromGoulash() model.HallResponse {
-	req, err := http.NewRequest("GET", s.apiURL, nil)
-	if err != nil {
-		log.Fatal("NewRequest: ", err)
-	}
-	req.Header.Set("UUID", s.apiUUID)
-	req.Header.Set("AUTHORIZATION", s.apiKEY)
+// вот эту логику ты выносишь в отдельный пакет и передаёшь сюда уже готовые структуры
+//func (s *repo) ImportHallsFromGoulash() model.HallResponse {
+//	req, err := http.NewRequest("GET", s.apiURL, nil)
+//	if err != nil {
+//		log.Fatal("NewRequest: ", err)
+//	}
+//	req.Header.Set("UUID", s.apiUUID)
+//	req.Header.Set("AUTHORIZATION", s.apiKEY)
+//
+//	client := &http.Client{}
+//	resp, err := client.Do(req)
+//	if err != nil {
+//		log.Fatal("Do: ", err)
+//	}
+//	defer func(Body io.ReadCloser) {
+//		err := Body.Close()
+//		if err != nil {
+//
+//		}
+//	}(resp.Body)
+//
+//	body, err := io.ReadAll(resp.Body)
+//	if err != nil {
+//		log.Fatal("ReadAll: ", err)
+//	}
+//
+//	var halls model.HallResponse
+//	if err := json.Unmarshal(body, &halls); err != nil {
+//		fmt.Println(string(body))
+//		log.Fatal("Unmarshal: ", err)
+//	}
+//
+//	return s.UpdateDatabase(halls)
+//}
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Fatal("Do: ", err)
-	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-
-		}
-	}(resp.Body)
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatal("ReadAll: ", err)
-	}
-
-	var halls model.HallResponse
-	if err := json.Unmarshal(body, &halls); err != nil {
-		fmt.Println(string(body))
-		log.Fatal("Unmarshal: ", err)
-	}
-
-	return s.UpdateDatabase(halls)
-}
-
-func (s *hallService) UpdateDatabase(response model.HallResponse) model.HallResponse {
+func (r *repo) UpdateDatabase(response model.HallResponse) model.HallResponse {
 	if !response.Success {
 		return model.HallResponse{
 			Success:      false,
@@ -114,7 +108,7 @@ func (s *hallService) UpdateDatabase(response model.HallResponse) model.HallResp
 		}
 	}
 
-	tx := s.db.Begin()
+	tx := r.db.Begin()
 	if err := tx.Error; err != nil {
 		tx.Rollback()
 		return model.HallResponse{

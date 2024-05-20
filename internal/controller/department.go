@@ -2,11 +2,11 @@ package controller
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
-	"hostess-service/internal/service"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 // GetAllWorkTimesByDepartment
@@ -21,7 +21,7 @@ import (
 // @Failure 400 {string} string "Invalid input"
 // @Failure 404 {string} string "No work times found"
 // @Router /department/{id} [get]
-func GetAllWorkTimesByDepartment(service service.DepartmentService) http.HandlerFunc {
+func GetAllWorkTimesByDepartment(service repository.DepartmentService) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		vars := mux.Vars(request)
 		departmentIdString, ok := vars["id"]
@@ -68,7 +68,7 @@ func GetAllWorkTimesByDepartment(service service.DepartmentService) http.Handler
 // @Failure 400 {string} string "Invalid input"
 // @Failure 404 {string} string "Department settings found"
 // @Router /department/settings/{id} [get]
-func GetDepartmentSettings(service service.DepartmentService) http.HandlerFunc {
+func GetDepartmentSettings(service repository.DepartmentService) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		vars := mux.Vars(request)
 		departmentIdString, ok := vars["id"]

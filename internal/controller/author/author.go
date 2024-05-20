@@ -1,14 +1,36 @@
-package controller
+package author
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
-	"hostess-service/internal/model"
-	"hostess-service/internal/service"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/gorilla/mux"
+
+	"hostess-service/internal/model"
 )
+
+// создаёшь класс (структуру) контроллера, в нём как минимум одно поле - интрефейс репозитория ТОЛЬКО с теми
+// функциями, которые тебе нужны в этом контроллере. В данном случае это работа с авторами.
+type controller struct {
+	repo authorRepo
+	// при необходимости потом добавишь сюда логгер и т.д.
+}
+
+func New(r authorRepo) *controller {
+	return &controller{repo: r}
+}
+
+// интерфейс описываешь именно в месте использования!!
+type authorRepo interface {
+	// в идеале, этот метод должен возвращать *model.Author вместе с ошщибкой. Если метод что-то меняет, он должен
+	// явно возвращать эту сущность.
+	CreateAuthor(author *model.Author) error
+	GetAllAuthors() ([]*model.Author, error)
+	UpdateAuthor(id int64, author *model.Author) error
+	DeleteAuthor(id int64) error
+}
 
 // CreateAuthor godoc
 // @Summary Create a new author
@@ -20,7 +42,7 @@ import (
 // @Success 200 {object}  model.Author
 // @Failure 400 {string} string "Invalid input"
 // @Router  /author [post]
-func CreateAuthor(service service.AuthorService) http.HandlerFunc {
+func (c *controller) CreateAuthor() http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		var author model.Author
 		err := json.NewDecoder(request.Body).Decode(&author)
@@ -30,7 +52,7 @@ func CreateAuthor(service service.AuthorService) http.HandlerFunc {
 			return
 		}
 
-		err = service.CreateAuthor(&author)
+		err = c.repo.CreateAuthor(&author)
 		if err != nil {
 			http.Error(writer, err.Error(), http.StatusInternalServerError)
 			log.Printf(err.Error())
@@ -56,9 +78,9 @@ func CreateAuthor(service service.AuthorService) http.HandlerFunc {
 // @Failure 400 {string} string "Invalid input"
 // @Failure 404 {string} string "Authors not found"
 // @Router /authors [get]
-func GetAllAuthors(service service.AuthorService) http.HandlerFunc {
+func (c *controller) GetAllAuthors() http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		authors, err := service.GetAllAuthors()
+		authors, err := c.repo.GetAllAuthors()
 		if err != nil {
 			http.Error(writer, err.Error(), http.StatusInternalServerError)
 			log.Printf(err.Error())
@@ -84,7 +106,7 @@ func GetAllAuthors(service service.AuthorService) http.HandlerFunc {
 // @Failure 400 {string} string "Invalid input"
 // @Failure 404 {string} string "Author not found"
 // @Router /author/{id} [put]
-func UpdateAuthor(service service.AuthorService) http.HandlerFunc {
+func (c *controller) UpdateAuthor() http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		vars := mux.Vars(request)
 		id, err := strconv.Atoi(vars["id"])
@@ -102,7 +124,7 @@ func UpdateAuthor(service service.AuthorService) http.HandlerFunc {
 			return
 		}
 
-		err = service.UpdateAuthor(int64(id), &author)
+		err = c.repo.UpdateAuthor(int64(id), &author)
 		if err != nil {
 			http.Error(writer, err.Error(), http.StatusNotFound)
 			log.Printf(err.Error())
@@ -126,7 +148,7 @@ func UpdateAuthor(service service.AuthorService) http.HandlerFunc {
 // @Success 204 "Author deleted"
 // Failure 404 {string} string "Author not found"
 // @Router /author/{id} [delete]
-func DeleteAuthor(service service.AuthorService) http.HandlerFunc {
+func (c *controller) DeleteAuthor() http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		vars := mux.Vars(request)
 		id, err := strconv.Atoi(vars["id"])
@@ -136,7 +158,7 @@ func DeleteAuthor(service service.AuthorService) http.HandlerFunc {
 			return
 		}
 
-		err = service.DeleteAuthor(int64(id))
+		err = c.repo.DeleteAuthor(int64(id))
 		if err != nil {
 			http.Error(writer, err.Error(), http.StatusNotFound)
 			log.Printf(err.Error())
