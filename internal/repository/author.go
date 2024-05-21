@@ -20,7 +20,7 @@ func (r *repo) GetAllAuthors() ([]*model.Author, error) {
 }
 
 func (r *repo) UpdateAuthor(id int64, author *model.Author) error {
-	result := r.db.Model(&model.Author{}).Where("id = ?", id).Updates(author)
+	result := r.db.Model(&model.Author{ID: id}).Where("id = ?", id).Updates(author)
 	log.Println(result.Error)
 	return result.Error
 }

@@ -13,59 +13,23 @@ import (
 
 // создаёшь класс (структуру) контроллера, в нём как минимум одно поле - интрефейс репозитория ТОЛЬКО с теми
 // функциями, которые тебе нужны в этом контроллере. В данном случае это работа с авторами.
-type controller struct {
-	service authorService
+type service struct {
+	repo authorRepo
 	// при необходимости потом добавишь сюда логгер и т.д.
 }
 
-func New(r authorService) *controller {
-	return &controller{service: r}
+func New(r authorRepo) *service {
+	return &service{repo: r}
 }
 
-// интерфейс описываешь именно в месте использования!!
-type authorService interface {
-	// в идеале, этот метод должен возвращать *model.Author вместе с ошщибкой. Если метод что-то меняет, он должен
-	// явно возвращать эту сущность.
-	CreateAuthor(author *model.Author) error
+type authorRepo interface {
 	GetAllAuthors() ([]*model.Author, error)
 	UpdateAuthor(id int64, author *model.Author) error
 	DeleteAuthor(id int64) error
 }
 
-// CreateAuthor godoc
-// @Summary Create a new author
-// @Description Create a new author with the provided information.
-// @Tags author
-// @Accept  json
-// @Produce  json
-// @Param   author   body    model.Author   true  "Create Author"
-// @Success 200 {object}  model.Author
-// @Failure 400 {string} string "Invalid input"
-// @Router  /author [post]
-func (c *controller) CreateAuthor() http.HandlerFunc {
-	return func(writer http.ResponseWriter, request *http.Request) {
-		var author model.Author
-		err := json.NewDecoder(request.Body).Decode(&author)
-		if err != nil {
-			http.Error(writer, err.Error(), http.StatusBadRequest)
-			log.Printf(err.Error())
-			return
-		}
+func (c *service) CreateAuthor(author *model.Author) error {
 
-		err = c.service.CreateAuthor(&author)
-		if err != nil {
-			http.Error(writer, err.Error(), http.StatusInternalServerError)
-			log.Printf(err.Error())
-			return
-		}
-
-		err = json.NewEncoder(writer).Encode(author)
-		if err != nil {
-			http.Error(writer, err.Error(), http.StatusInternalServerError)
-			log.Printf(err.Error())
-			return
-		}
-	}
 }
 
 // GetAllAuthors
@@ -80,7 +44,7 @@ func (c *controller) CreateAuthor() http.HandlerFunc {
 // @Router /authors [get]
 func (c *controller) GetAllAuthors() http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		authors, err := c.service.GetAllAuthors()
+		authors, err := c.repo.GetAllAuthors()
 		if err != nil {
 			http.Error(writer, err.Error(), http.StatusInternalServerError)
 			log.Printf(err.Error())
@@ -124,7 +88,7 @@ func (c *controller) UpdateAuthor() http.HandlerFunc {
 			return
 		}
 
-		err = c.service.UpdateAuthor(int64(id), &author)
+		err = c.repo.UpdateAuthor(int64(id), &author)
 		if err != nil {
 			http.Error(writer, err.Error(), http.StatusNotFound)
 			log.Printf(err.Error())
@@ -158,7 +122,7 @@ func (c *controller) DeleteAuthor() http.HandlerFunc {
 			return
 		}
 
-		err = c.service.DeleteAuthor(int64(id))
+		err = c.repo.DeleteAuthor(int64(id))
 		if err != nil {
 			http.Error(writer, err.Error(), http.StatusNotFound)
 			log.Printf(err.Error())

@@ -9,8 +9,9 @@ import (
 
 	"hostess-service/config"
 	"hostess-service/internal/controller/author"
-	"hostess-service/internal/middleware"
+	"hostess-service/internal/controller/department"
 	"hostess-service/internal/repository"
+	depservice "hostess-service/internal/service/department"
 
 	"hostess-service/internal/websocket"
 	"hostess-service/pkg/mysql"
@@ -28,16 +29,18 @@ func Run(cfg *config.Config) {
 	router.HandleFunc("/api/v1/author/{id}", authorController.UpdateAuthor()).Methods("POST")
 	router.HandleFunc("/api/v1/author/{id}", authorController.DeleteAuthor()).Methods("POST")
 
+	departmentController := department.New(depservice.New(repo))
+	router.HandleFunc("/api/v1/department/{id}", departmentController.GetAllWorkTimesByDepartment()).Methods("GET")
+	router.HandleFunc("/api/v1/department/settings/{id}", departmentController.GetDepartmentSettings()).Methods("GET")
+
 	// ты сюда передаёшь весь репозиторий, а там использешь только методы интерфейса.
 
 	reservationService := repository.NewReservationService(db)
 	hallService := repository.NewHallService(db, cfg.Goulash)
-	departmentService := repository.NewDepartmentService(db)
-	authorService := repository.NewAuthorRepo(db)
 
 	ioServer := websocket.SetupSocketIO()
 	socketRouter := router.PathPrefix("/socket.io/").Subrouter()
-	socketRouter.Use(middleware.Cors)
+	socketRouter.Use(cors)
 	socketRouter.Handle("/", ioServer)
 
 	go func() {

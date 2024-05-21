@@ -1,4 +1,4 @@
-package controller
+package department
 
 import (
 	"encoding/json"
@@ -7,7 +7,22 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+
+	"hostess-service/internal/model"
 )
+
+type controller struct {
+	service departmentService
+}
+
+func New(r departmentService) *controller {
+	return &controller{service: r}
+}
+
+type departmentService interface {
+	GetDepartmentSettings(departmentId int64) (*model.DepartmentSettings, error)
+	GetAllWorkTimeByDepartment(departmentId int64, dayOfWeek string) ([]model.WorkTimeAPI, error)
+}
 
 // GetAllWorkTimesByDepartment
 // @Summary Get all work times by department
@@ -21,7 +36,7 @@ import (
 // @Failure 400 {string} string "Invalid input"
 // @Failure 404 {string} string "No work times found"
 // @Router /department/{id} [get]
-func GetAllWorkTimesByDepartment(service repository.DepartmentService) http.HandlerFunc {
+func (c *controller) GetAllWorkTimesByDepartment() http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		vars := mux.Vars(request)
 		departmentIdString, ok := vars["id"]
@@ -38,7 +53,7 @@ func GetAllWorkTimesByDepartment(service repository.DepartmentService) http.Hand
 
 		dayOfWeek := request.URL.Query().Get("day_of_week")
 
-		workTimes, err := service.GetAllWorkTimeByDepartment(departmentId, dayOfWeek)
+		workTimes, err := c.service.GetAllWorkTimeByDepartment(departmentId, dayOfWeek)
 		if err != nil {
 			http.Error(writer, "Work times not found", http.StatusNotFound)
 			return
@@ -68,7 +83,7 @@ func GetAllWorkTimesByDepartment(service repository.DepartmentService) http.Hand
 // @Failure 400 {string} string "Invalid input"
 // @Failure 404 {string} string "Department settings found"
 // @Router /department/settings/{id} [get]
-func GetDepartmentSettings(service repository.DepartmentService) http.HandlerFunc {
+func (c *controller) GetDepartmentSettings() http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		vars := mux.Vars(request)
 		departmentIdString, ok := vars["id"]
@@ -81,7 +96,7 @@ func GetDepartmentSettings(service repository.DepartmentService) http.HandlerFun
 			http.Error(writer, "Invalid department ID parameter", http.StatusBadRequest)
 		}
 
-		departmentSettings, err := service.GetDepartmentSettings(departmentId)
+		departmentSettings, err := c.service.GetDepartmentSettings(departmentId)
 		if err != nil {
 			http.Error(writer, "Department settings not found", http.StatusNotFound)
 		}
