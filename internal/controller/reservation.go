@@ -2,13 +2,15 @@ package controller
 
 import (
 	"encoding/json"
-	socketio "github.com/googollee/go-socket.io"
-	"github.com/gorilla/mux"
-	"hostess-service/internal/model"
-	"hostess-service/internal/service"
 	"log"
 	"net/http"
 	"strconv"
+
+	socketio "github.com/googollee/go-socket.io"
+	"github.com/gorilla/mux"
+
+	"hostess-service/internal/model"
+	"hostess-service/internal/repository"
 )
 
 // CreateReservation handler
@@ -21,7 +23,7 @@ import (
 // @Success 200 {object} model.ReservationResponse
 // @Failure 400 {string} string "Invalid input"
 // @Router /reservations [post]
-func CreateReservation(service service.ReservationService, socketServer *socketio.Server) http.HandlerFunc {
+func CreateReservation(service repository.ReservationService, socketServer *socketio.Server) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		writer.Header().Set("Content-Type", "application/json")
 
@@ -87,7 +89,7 @@ func CreateReservation(service service.ReservationService, socketServer *socketi
 // @Success 200 {object}  model.Reservation
 // @Failure 400 {string} string "Reservation not found"
 // @Router  /reservations/{id} [get]
-func GetReservation(service service.ReservationService) http.HandlerFunc {
+func GetReservation(service repository.ReservationService) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		vars := mux.Vars(request)
 		id, err := strconv.Atoi(vars["id"])
@@ -122,7 +124,7 @@ func GetReservation(service service.ReservationService) http.HandlerFunc {
 // @Failure 400 {string} string "Invalid input"
 // @Failure 404 {string} string "Reservation not found"
 // @Router /reservations [get]
-func GetAllReservations(service service.ReservationService) http.HandlerFunc {
+func GetAllReservations(service repository.ReservationService) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		// Parse date_from and date_to query parameters
 		query := request.URL.Query()
@@ -176,7 +178,7 @@ func GetAllReservations(service service.ReservationService) http.HandlerFunc {
 // @Failure 400 {string} string "Invalid input"
 // @Failure 404 {string} string "Reservation not found"
 // @Router /reservations/{id} [put]
-func UpdateReservation(service service.ReservationService) http.HandlerFunc {
+func UpdateReservation(service repository.ReservationService) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		writer.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(request)
@@ -248,7 +250,7 @@ func UpdateReservation(service service.ReservationService) http.HandlerFunc {
 // @Failure 400 {string} string "Invalid input"
 // @Failure 404 {string} string "Reservation not found"
 // @Router /reservations/status/{id} [put]
-func UpdateReservationStatus(service service.ReservationService) http.HandlerFunc {
+func UpdateReservationStatus(service repository.ReservationService) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		writer.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(request)
@@ -306,7 +308,7 @@ func UpdateReservationStatus(service service.ReservationService) http.HandlerFun
 // @Success 204 "Reservation deleted"
 // Failure 404 {string} string "Reservation not found"
 // @Router /reservations/{id} [delete]
-func DeleteReservation(service service.ReservationService) http.HandlerFunc {
+func DeleteReservation(service repository.ReservationService) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		vars := mux.Vars(request)
 		id, err := strconv.Atoi(vars["id"])

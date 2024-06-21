@@ -2,7 +2,6 @@ package controller
 
 import (
 	"encoding/json"
-	"hostess-service/internal/service"
 	"log"
 	"net/http"
 )
@@ -16,7 +15,7 @@ import (
 // @Success 200 {array} model.HallResponse
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /halls/map [get]
-func GetHallsMap(hs service.HallService) http.HandlerFunc {
+func GetHallsMap(hs repository.HallService) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		halls, err := hs.GetHallsMap()
 		if err != nil {
@@ -34,7 +33,7 @@ func GetHallsMap(hs service.HallService) http.HandlerFunc {
 	}
 }
 
-func HallsUpdate(hs service.HallService) http.HandlerFunc {
+func HallsUpdate(hs repository.HallService) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		response := hs.ImportHallsFromGoulash()
 		if !response.Success {

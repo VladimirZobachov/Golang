@@ -1,49 +1,35 @@
-package controller
+package author
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
-	"hostess-service/internal/model"
-	"hostess-service/internal/service"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/gorilla/mux"
+
+	"hostess-service/internal/model"
 )
 
-// CreateAuthor godoc
-// @Summary Create a new author
-// @Description Create a new author with the provided information.
-// @Tags author
-// @Accept  json
-// @Produce  json
-// @Param   author   body    model.Author   true  "Create Author"
-// @Success 200 {object}  model.Author
-// @Failure 400 {string} string "Invalid input"
-// @Router  /author [post]
-func CreateAuthor(service service.AuthorService) http.HandlerFunc {
-	return func(writer http.ResponseWriter, request *http.Request) {
-		var author model.Author
-		err := json.NewDecoder(request.Body).Decode(&author)
-		if err != nil {
-			http.Error(writer, err.Error(), http.StatusBadRequest)
-			log.Printf(err.Error())
-			return
-		}
+// создаёшь класс (структуру) контроллера, в нём как минимум одно поле - интрефейс репозитория ТОЛЬКО с теми
+// функциями, которые тебе нужны в этом контроллере. В данном случае это работа с авторами.
+type service struct {
+	repo authorRepo
+	// при необходимости потом добавишь сюда логгер и т.д.
+}
 
-		err = service.CreateAuthor(&author)
-		if err != nil {
-			http.Error(writer, err.Error(), http.StatusInternalServerError)
-			log.Printf(err.Error())
-			return
-		}
+func New(r authorRepo) *service {
+	return &service{repo: r}
+}
 
-		err = json.NewEncoder(writer).Encode(author)
-		if err != nil {
-			http.Error(writer, err.Error(), http.StatusInternalServerError)
-			log.Printf(err.Error())
-			return
-		}
-	}
+type authorRepo interface {
+	GetAllAuthors() ([]*model.Author, error)
+	UpdateAuthor(id int64, author *model.Author) error
+	DeleteAuthor(id int64) error
+}
+
+func (c *service) CreateAuthor(author *model.Author) error {
+
 }
 
 // GetAllAuthors
@@ -56,9 +42,9 @@ func CreateAuthor(service service.AuthorService) http.HandlerFunc {
 // @Failure 400 {string} string "Invalid input"
 // @Failure 404 {string} string "Authors not found"
 // @Router /authors [get]
-func GetAllAuthors(service service.AuthorService) http.HandlerFunc {
+func (c *controller) GetAllAuthors() http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		authors, err := service.GetAllAuthors()
+		authors, err := c.repo.GetAllAuthors()
 		if err != nil {
 			http.Error(writer, err.Error(), http.StatusInternalServerError)
 			log.Printf(err.Error())
@@ -84,7 +70,7 @@ func GetAllAuthors(service service.AuthorService) http.HandlerFunc {
 // @Failure 400 {string} string "Invalid input"
 // @Failure 404 {string} string "Author not found"
 // @Router /author/{id} [put]
-func UpdateAuthor(service service.AuthorService) http.HandlerFunc {
+func (c *controller) UpdateAuthor() http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		vars := mux.Vars(request)
 		id, err := strconv.Atoi(vars["id"])
@@ -102,7 +88,7 @@ func UpdateAuthor(service service.AuthorService) http.HandlerFunc {
 			return
 		}
 
-		err = service.UpdateAuthor(int64(id), &author)
+		err = c.repo.UpdateAuthor(int64(id), &author)
 		if err != nil {
 			http.Error(writer, err.Error(), http.StatusNotFound)
 			log.Printf(err.Error())
@@ -126,7 +112,7 @@ func UpdateAuthor(service service.AuthorService) http.HandlerFunc {
 // @Success 204 "Author deleted"
 // Failure 404 {string} string "Author not found"
 // @Router /author/{id} [delete]
-func DeleteAuthor(service service.AuthorService) http.HandlerFunc {
+func (c *controller) DeleteAuthor() http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		vars := mux.Vars(request)
 		id, err := strconv.Atoi(vars["id"])
@@ -136,7 +122,7 @@ func DeleteAuthor(service service.AuthorService) http.HandlerFunc {
 			return
 		}
 
-		err = service.DeleteAuthor(int64(id))
+		err = c.repo.DeleteAuthor(int64(id))
 		if err != nil {
 			http.Error(writer, err.Error(), http.StatusNotFound)
 			log.Printf(err.Error())

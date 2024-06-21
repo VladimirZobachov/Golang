@@ -1,8 +1,10 @@
-package service
+package repository
 
 import (
 	"errors"
+
 	"gorm.io/gorm"
+
 	"hostess-service/internal/model"
 )
 
